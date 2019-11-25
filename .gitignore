@@ -1,0 +1,10 @@
+# Bazel Build Artifacts
+bazel-testlogs
+bazel-bin
+bazel-genfiles
+bazel-out
+bazel-mmpl
+
+# Doxygen
+dox/html
+dox/latex

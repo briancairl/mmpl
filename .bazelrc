@@ -1,0 +1,4 @@
+build --copt=-O3
+build --copt=-g
+build --cxxopt='-std=c++17'
+build --cxxopt='-Wall'

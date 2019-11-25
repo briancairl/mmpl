@@ -1,3 +1,5 @@
-# SMPL
+# MMPL
 
-The Simple Motion Planning Library is a module planning library designed for motion planning in games, particularly simple 2D games. The planners in this library are, however, made general enough so that they can be utilized in other domains.
+The Modular Motion Planning Library is a compile-time moduler planning library designed for motion planning in games, etc.
+
+- Compiles with C++17 or later
