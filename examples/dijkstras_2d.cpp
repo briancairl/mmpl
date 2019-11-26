@@ -1,6 +1,7 @@
 // C++ Standard Library
 #include <array>
 #include <cstring>
+#include <chrono>
 #include <iostream>
 #include <iomanip>
 
@@ -176,6 +177,8 @@ int main(int argc, char** argv)
   // Setup a stopping criteria object
   SingleGoalTerminationCriteria criteria{goal};
 
+  const auto t_start = std::chrono::high_resolution_clock::now();
+
   // Search until a termination
   PlannerCode code;
   std::size_t iterations{0};
@@ -184,6 +187,11 @@ int main(int argc, char** argv)
     ++iterations;
     code = planner.update(metric, state_space, criteria);
   }
+
+
+  // Get approximate time to plan
+  using DFloat = std::chrono::duration<float>;
+  std::cout << "t plan: " << std::chrono::duration_cast<DFloat>(std::chrono::high_resolution_clock::now() - t_start).count() << std::endl;
 
   // Show some meta-information
   std::cout << "code  : " << code << std::endl;
