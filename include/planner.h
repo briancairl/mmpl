@@ -121,7 +121,7 @@ public:
       };
 
     // Check if search is terminated
-    if (termination_criteria.is_terminal(pred.state, enqueue_valid))
+    if (termination_criteria.is_terminal(pred.state))
     {
       return PlannerCode::GOAL_FOUND;
     }

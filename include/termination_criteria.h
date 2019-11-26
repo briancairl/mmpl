@@ -27,10 +27,9 @@ struct TerminationCriteriaBase
 public:
   using StateType = termination_criteria_state_t<DerivedT>;
 
-  template<typename UnaryChildFn>
-  inline bool is_terminal(const StateType& query, UnaryChildFn&& child_fn) const
+  inline bool is_terminal(const StateType& query) const
   {
-    return CRTP_INDIRECT_M(is_terminal)(query, std::forward<UnaryChildFn>(child_fn));
+    return CRTP_INDIRECT_M(is_terminal)(query);
   }
 
 private:
@@ -49,15 +48,9 @@ public:
   {}
 
 private:
-  template<typename UnaryChildFn>
-  inline bool CRTP_OVERRIDE_M(is_terminal)(const StateT& query, const UnaryChildFn& child_fn) const
+  inline bool CRTP_OVERRIDE_M(is_terminal)(const StateT& query) const
   {
-    if (terminal_state_ == query)
-    {
-      child_fn(terminal_state_);
-      return true;
-    }
-    return false;
+    return terminal_state_ == query;
   }
 
   StateT terminal_state_;
