@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <ostream>
 #include <type_traits>
+#include <utility>
 
 // CRTP
 #include <crtp/crtp.h>
@@ -190,19 +191,32 @@ public:
     PlannerBaseType{std::forward<ArgTs>(args)...}
   {}
 
-  template<typename... ArgTs>
-  explicit ShortestPathPlanner(const std::initializer_list<StateT>& start_states, ArgTs&&... args) :
-    ShortestPathPlanner{std::forward<ArgTs>(args)...}
-  {
-    for (const auto& s : start_states)
-    {
-      PlannerBaseType::enqueue(s);
-    }
-  }
-
 private:
   IMPLEMENT_CRTP_DERIVED_CLASS(PlannerBase, ShortestPathPlanner);
 };
+
+
+template<typename PlannerT, typename MetricT, typename StateSpaceT>
+std::pair<PlannerCode, std::size_t> run_plan(PlannerBase<PlannerT>& planner,
+                                             MetricBase<MetricT>& metric,
+                                             StateSpaceBase<StateSpaceT>& state_space,
+                                             const planner_state_t<PlannerT>& start,
+                                             const planner_state_t<PlannerT>& goal)
+{
+  planner.enqueue(start);
+
+  PlannerCode code;
+  std::size_t iterations{0};
+
+  SingleGoalTerminationCriteria criteria{goal};
+  while (code == PlannerCode::SEARCHING)
+  {
+    ++iterations;
+    code = planner.update(metric, state_space, criteria);
+  }
+
+  return std::make_pair(code, iterations);
+}
 
 
 template<typename StateT, typename ValueT, typename ExpansionQueueT, typename ExpansionTableT>

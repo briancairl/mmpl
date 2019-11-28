@@ -163,7 +163,6 @@ int main(int argc, char** argv)
 
   // Create the planner
   ShortestPathPlanner<State2D, int, ExpansionQueueType, ExpansionTableType> planner{
-    {start},
     ExpansionQueueType{},
     ExpansionTableType{std::cout}
   };
@@ -180,14 +179,7 @@ int main(int argc, char** argv)
   const auto t_start = std::chrono::high_resolution_clock::now();
 
   // Search until a termination
-  PlannerCode code;
-  std::size_t iterations{0};
-  while (code == PlannerCode::SEARCHING)
-  {
-    ++iterations;
-    code = planner.update(metric, state_space, criteria);
-  }
-
+  const auto [code, iterations] = run_plan(planner, metric, state_space, start, goal);
 
   // Get approximate time to plan
   using DFloat = std::chrono::duration<float>;
