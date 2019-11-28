@@ -195,7 +195,10 @@ private:
    */
   inline void CRTP_OVERRIDE_M(reset)()
   {
-    queue_.clear();
+    std::priority_queue<StateValueType,
+                        std::vector<StateValueType, StateValueAllocatorT>,
+                        std::greater<StateValueType>> swap_queue;
+    queue_.swap(swap_queue);
   }
 
   /**
