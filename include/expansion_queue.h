@@ -19,7 +19,6 @@ namespace mmpl
 template<typename StateT, typename ValueT>
 struct StateValue
 {
-  static_assert(is_state<StateT>(), "StateT must be a valid derivative type of StateBase");
   static_assert(is_value<ValueT>(), "ValueT must be a valid metric value type");
 
   StateValue(const StateValue&) = default;
@@ -156,7 +155,6 @@ public:
   }
 
 private:
-  static_assert(is_state<StateType>(), MMPL_STATIC_ASSERT_MSG("StateType must be a valid derivative type of StateBase"));
   static_assert(is_value<ValueType>(), MMPL_STATIC_ASSERT_MSG("ValueType must be a valid metric value type"));
 
   IMPLEMENT_CRTP_BASE_CLASS(ExpansionQueueBase, DerivedT);

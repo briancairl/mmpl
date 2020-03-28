@@ -36,8 +36,6 @@ public:
   }
 
 private:
-  static_assert(is_state<StateType>(), MMPL_STATIC_ASSERT_MSG("StateType must be a valid derivative type of StateBase"));
-
   IMPLEMENT_CRTP_BASE_CLASS(StateSpaceBase, DerivedT);
 };
 

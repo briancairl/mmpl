@@ -39,7 +39,6 @@ public:
   }
 
 private:
-  static_assert(is_state<StateType>(), MMPL_STATIC_ASSERT_MSG("StateType must be a valid derivative type of StateBase"));
   static_assert(is_value<ValueType>(), MMPL_STATIC_ASSERT_MSG("ValueType must be a valid metric value type"));
 
   IMPLEMENT_CRTP_BASE_CLASS(MetricBase, DerivedT);

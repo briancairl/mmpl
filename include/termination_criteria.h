@@ -33,8 +33,6 @@ public:
   }
 
 private:
-  static_assert(is_state<StateType>(), "StateType must be a valid derivative type of StateBase");
-
   IMPLEMENT_CRTP_BASE_CLASS(TerminationCriteriaBase, DerivedT);
 };
 
