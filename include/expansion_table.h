@@ -127,9 +127,9 @@ private:
 
 
 template<typename OutputIteratorT, typename ExpansionTableT>
-void generate_reverse_path(OutputIteratorT output,
-                           expansion_table_state_t<ExpansionTableT> terminal,
-                           const ExpansionTableBase<ExpansionTableT>& expansion_table)
+OutputIteratorT generate_reverse_path(OutputIteratorT output,
+                                      expansion_table_state_t<ExpansionTableT> terminal,
+                                      const ExpansionTableBase<ExpansionTableT>& expansion_table)
 {
   using ValueType = expansion_table_value_t<ExpansionTableT>;
 
@@ -139,6 +139,33 @@ void generate_reverse_path(OutputIteratorT output,
     terminal = expansion_table.get_parent(terminal);
     *(++output) = terminal;
   }
+  return output;
+}
+
+
+template<typename OutputIteratorT, typename LastOutputIteratorT, typename ExpansionTableT>
+OutputIteratorT generate_reverse_path(OutputIteratorT output,
+                                      LastOutputIteratorT last,
+                                      expansion_table_state_t<ExpansionTableT> terminal,
+                                      const ExpansionTableBase<ExpansionTableT>& expansion_table)
+{
+  using ValueType = expansion_table_value_t<ExpansionTableT>;
+
+  if (output == last)
+  {
+    return output;
+  }
+  else
+  {
+    *(++output) = terminal;
+  }
+
+  while (output != last and expansion_table.get_total_value(terminal) != Null<ValueType>::value)
+  {
+    terminal = expansion_table.get_parent(terminal);
+    *(++output) = terminal;
+  }
+  return output;
 }
 
 
