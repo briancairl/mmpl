@@ -12,20 +12,16 @@
 namespace mmpl
 {
 
-template<typename T>
-struct MetricTraits;
+template <typename T> struct MetricTraits;
 
 
-template<typename MetricT>
-using metric_value_t = typename MetricTraits<MetricT>::ValueType;
+template <typename MetricT> using metric_value_t = typename MetricTraits<MetricT>::ValueType;
 
 
-template<typename MetricT>
-using metric_state_t = typename MetricTraits<MetricT>::StateType;
+template <typename MetricT> using metric_state_t = typename MetricTraits<MetricT>::StateType;
 
 
-template<typename DerivedT>
-class MetricBase
+template <typename DerivedT> class MetricBase
 {
 public:
   using ValueType = metric_value_t<DerivedT>;
@@ -43,8 +39,9 @@ private:
 };
 
 
-template<typename MetricT>
-struct is_metric : std::integral_constant<bool, std::is_base_of<MetricBase<MetricT>, MetricT>::value> {};
+template <typename MetricT>
+struct is_metric : std::integral_constant<bool, std::is_base_of<MetricBase<MetricT>, MetricT>::value>
+{};
 
 
 }  // namespace mmpl

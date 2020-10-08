@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 
 // TwoD
-#include <mmpl/state_space.h>
 #include <mmpl/metric.h>
+#include <mmpl/state_space.h>
 
 using namespace mmpl;
 
@@ -17,8 +17,7 @@ namespace mmpl
 class TestStateSpace;
 class TestState;
 
-template<>
-struct StateTraits<TestState>
+template <> struct StateTraits<TestState>
 {
   using IDType = int;
 };
@@ -27,17 +26,13 @@ struct StateTraits<TestState>
 class TestState : public StateBase<TestState>
 {
 private:
-  inline int id_impl() const
-  {
-    return 1;
-  }
+  inline int id_impl() const { return 1; }
 
   friend class StateBase<TestState>;
 };
 
 
-template<>
-struct StateSpaceTraits<TestStateSpace>
+template <> struct StateSpaceTraits<TestStateSpace>
 {
   using StateType = TestState;
 };
@@ -45,9 +40,8 @@ struct StateSpaceTraits<TestStateSpace>
 class TestStateSpace : public StateSpaceBase<TestStateSpace>
 {
 public:
-
 private:
-  template<typename StateT, typename UnaryFnT>
+  template <typename StateT, typename UnaryFnT>
   inline bool for_each_child_impl(const StateT& parent, const UnaryFnT& child_fn)
   {
     return true;
@@ -66,7 +60,7 @@ TEST(StateSpace, ForEachChild)
 }
 
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

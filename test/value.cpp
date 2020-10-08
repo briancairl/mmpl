@@ -12,40 +12,22 @@
 using namespace mmpl;
 
 
-TEST(SignedIntValue, Null)
-{
-  ASSERT_EQ(Null<int>::value, static_cast<int>(0));
-}
+TEST(SignedIntValue, Null) { ASSERT_EQ(Null<int>::value, static_cast<int>(0)); }
 
 
-TEST(SignedIntValue, Invalid)
-{
-  ASSERT_EQ(Invalid<int>::value, std::numeric_limits<int>::max());
-}
+TEST(SignedIntValue, Invalid) { ASSERT_EQ(Invalid<int>::value, std::numeric_limits<int>::max()); }
 
 
-TEST(UnsignedIntValue, Null)
-{
-  ASSERT_EQ(Null<unsigned>::value, static_cast<unsigned>(0));
-}
+TEST(UnsignedIntValue, Null) { ASSERT_EQ(Null<unsigned>::value, static_cast<unsigned>(0)); }
 
 
-TEST(UnsignedIntValue, Invalid)
-{
-  ASSERT_EQ(Invalid<unsigned>::value, std::numeric_limits<unsigned>::max());
-}
+TEST(UnsignedIntValue, Invalid) { ASSERT_EQ(Invalid<unsigned>::value, std::numeric_limits<unsigned>::max()); }
 
 
-TEST(FloatValue, Null)
-{
-  ASSERT_EQ(Null<float>::value, static_cast<float>(0));
-}
+TEST(FloatValue, Null) { ASSERT_EQ(Null<float>::value, static_cast<float>(0)); }
 
 
-TEST(FloatValue, Invalid)
-{
-  ASSERT_EQ(Invalid<float>::value, std::numeric_limits<float>::max());
-}
+TEST(FloatValue, Invalid) { ASSERT_EQ(Invalid<float>::value, std::numeric_limits<float>::max()); }
 
 
 TEST(HeuristicValue, Null)
@@ -140,7 +122,7 @@ TEST(HeuristicValue, CompoundScaling)
 }
 
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
