@@ -5,10 +5,8 @@
 #include <ostream>
 #include <unordered_map>
 
-// CRTP
-#include <crtp/crtp.h>
-
 // MMPL
+#include <mmpl/crtp.h>
 #include <mmpl/state.h>
 #include <mmpl/support.h>
 #include <mmpl/value.h>
@@ -47,7 +45,7 @@ public:
    */
   inline void reset()
   {
-    CRTP_INDIRECT_M(reset)();
+    this->derived()->reset_impl();
   }
 
   /**
@@ -62,7 +60,7 @@ public:
    */
   inline bool expand(const StateType& parent, const StateType& child, const ValueType& total_value)
   {
-    return CRTP_INDIRECT_M(expand)(parent, child, total_value);
+    return this->derived()->expand_impl(parent, child, total_value);
   }
 
   /**
@@ -75,7 +73,7 @@ public:
    */
   inline bool is_expanded(const StateType& query) const
   {
-    return CRTP_INDIRECT_M(is_expanded)(query);
+    return this->derived()->is_expanded_impl(query);
   }
 
   /**
@@ -88,7 +86,7 @@ public:
   inline StateType get_parent(const StateType& query) const
   {
     MMPL_RUNTIME_ASSERT(is_expanded(query));
-    return CRTP_INDIRECT_M(get_parent)(query);
+    return this->derived()->get_parent_impl(query);
   }
 
   /**
@@ -103,7 +101,7 @@ public:
   inline ValueType get_total_value(const StateType& query) const
   {
     MMPL_RUNTIME_ASSERT(is_expanded(query));
-    return CRTP_INDIRECT_M(get_total_value)(query);
+    return this->derived()->get_total_value_impl(query);
   }
 
   /**
@@ -116,7 +114,7 @@ public:
    */
   inline ValueType try_get_total_value(const StateType& query) const
   {
-    return is_expanded(query) ? CRTP_INDIRECT_M(get_total_value)(query) : Invalid<ValueType>::value;
+    return is_expanded(query) ? this->derived()->get_total_value_impl(query) : Invalid<ValueType>::value;
   }
 
 private:
@@ -181,7 +179,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::reset
    */
-  inline void CRTP_OVERRIDE_M(reset)()
+  inline void reset_impl()
   {
     child_parent_table_.clear();
     child_cost_table_.clear();
@@ -190,7 +188,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::expand
    */
-  inline bool CRTP_OVERRIDE_M(expand)(const StateT& parent, const StateT& child, const ValueT& total_value)
+  inline bool expand_impl(const StateT& parent, const StateT& child, const ValueT& total_value)
   {
     return child_parent_table_.emplace(child, parent).second and
            child_cost_table_.emplace(child, total_value).second;
@@ -199,7 +197,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::is_expanded
    */
-  inline bool CRTP_OVERRIDE_M(is_expanded)(const StateT& query) const
+  inline bool is_expanded_impl(const StateT& query) const
   {
     return child_parent_table_.find(query) != child_parent_table_.end();
   }
@@ -207,7 +205,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::get_parent
    */
-  inline StateT CRTP_OVERRIDE_M(get_parent)(const StateT& query) const
+  inline StateT get_parent_impl(const StateT& query) const
   {
     return child_parent_table_.find(query)->second;
   }
@@ -215,7 +213,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::get_total_value
    */
-  inline ValueT CRTP_OVERRIDE_M(get_total_value)(const StateT& query) const
+  inline ValueT get_total_value_impl(const StateT& query) const
   {
     return child_cost_table_.find(query)->second;
   }
@@ -226,7 +224,7 @@ private:
   /// [child, parent] mapping
   std::unordered_map<StateT, StateT, state_default_hash_t<StateT>> child_parent_table_;
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(ExpansionTableBase, UnorderedExpansionTable);
+  friend class ExpansionTableBase<UnorderedExpansionTable<StateT, ValueT>>;
 };
 
 
@@ -260,7 +258,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::reset
    */
-  inline void CRTP_OVERRIDE_M(reset)()
+  inline void reset_impl()
   {
     expansion_count_ = 0UL;
     (*os_) << "table reset" << std::endl;
@@ -270,7 +268,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::expand
    */
-  inline bool CRTP_OVERRIDE_M(expand)(const StateType& parent, const StateType& child, const ValueType& total_value)
+  inline bool expand_impl(const StateType& parent, const StateType& child, const ValueType& total_value)
   {
     if (underlying_.expand(parent, child, total_value))
     {
@@ -290,7 +288,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::is_expanded
    */
-  inline bool CRTP_OVERRIDE_M(is_expanded)(const StateType& query) const
+  inline bool is_expanded_impl(const StateType& query) const
   {
     return underlying_.is_expanded(query);
   }
@@ -298,7 +296,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::get_parent
    */
-  inline StateType CRTP_OVERRIDE_M(get_parent)(const StateType& query) const
+  inline StateType get_parent_impl(const StateType& query) const
   {
     const StateType parent = underlying_.get_parent(query);
     if (on_parent_lookup_)
@@ -311,7 +309,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::get_total_value
    */
-  inline ValueType CRTP_OVERRIDE_M(get_total_value)(const StateType& query) const
+  inline ValueType get_total_value_impl(const StateType& query) const
   {
     return underlying_.get_total_value(query);
   }
@@ -331,7 +329,7 @@ private:
   /// Underlying expansion table
   UnderlyingT underlying_;
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(ExpansionTableBase, ExpansionTableOutputStreamHook);
+  friend ExpansionTableBase<ExpansionTableOutputStreamHook<UnderlyingT>>;
 };
 
 

@@ -4,10 +4,8 @@
 // C++ Standard Library
 #include <type_traits>
 
-// CRTP
-#include <crtp/crtp.h>
-
 // MMPL
+#include <mmpl/crtp.h>
 #include <mmpl/state.h>
 
 namespace mmpl
@@ -29,7 +27,7 @@ public:
 
   inline bool is_terminal(const StateType& query) const
   {
-    return CRTP_INDIRECT_M(is_terminal)(query);
+    return this->derived()->is_terminal_impl(query);
   }
 
 private:
@@ -46,14 +44,14 @@ public:
   {}
 
 private:
-  inline bool CRTP_OVERRIDE_M(is_terminal)(const StateT& query) const
+  inline bool is_terminal_impl(const StateT& query) const
   {
     return terminal_state_ == query;
   }
 
   StateT terminal_state_;
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(TerminationCriteriaBase, SingleGoalTerminationCriteria);
+  friend class TerminationCriteriaBase<SingleGoalTerminationCriteria<StateT>>;
 };
 
 

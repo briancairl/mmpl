@@ -124,7 +124,7 @@ public:
    */
   inline void reset()
   {
-    CRTP_INDIRECT_M(reset)();
+    this->derived()->reset_impl();
   }
 
   /**
@@ -132,7 +132,7 @@ public:
    */
   inline bool empty() const
   {
-    return CRTP_INDIRECT_M(empty)();
+    return this->derived()->empty_impl();
   }
 
   /**
@@ -143,7 +143,7 @@ public:
    */
   inline void enqueue(const StateType& state, const ValueType& total_value)
   {
-    CRTP_INDIRECT_M(enqueue)(state, total_value);
+    this->derived()->enqueue_impl(state, total_value);
   }
 
   /**
@@ -151,7 +151,7 @@ public:
    */
   inline StateValue<StateType, ValueType> next()
   {
-    return CRTP_INDIRECT_M(next)();
+    return this->derived()->next_impl();
   }
 
 private:
@@ -191,7 +191,7 @@ private:
   /**
    * @copydoc ExpansionQueueBase::reset
    */
-  inline void CRTP_OVERRIDE_M(reset)()
+  inline void reset_impl()
   {
     std::priority_queue<StateValueType,
                         std::vector<StateValueType, StateValueAllocatorT>,
@@ -202,7 +202,7 @@ private:
   /**
    * @copydoc ExpansionQueueBase::empty
    */
-  inline bool CRTP_OVERRIDE_M(empty)() const
+  inline bool empty_impl() const
   {
     return queue_.empty();
   }
@@ -210,7 +210,7 @@ private:
   /**
    * @copydoc ExpansionQueueBase::enqueue
    */
-  inline void CRTP_OVERRIDE_M(enqueue)(const StateT& state, const ValueT& total_value)
+  inline void enqueue_impl(const StateT& state, const ValueT& total_value)
   {
     queue_.emplace(state, total_value);
   }
@@ -218,7 +218,7 @@ private:
   /**
    * @copydoc ExpansionQueueBase::next
    */
-  inline StateValueType CRTP_OVERRIDE_M(next)()
+  inline StateValueType next_impl()
   {
     const auto v = queue_.top();
     queue_.pop();
@@ -230,7 +230,7 @@ private:
                       std::vector<StateValueType, StateValueAllocatorT>,
                       std::greater<StateValueType>> queue_;
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(ExpansionQueueBase, MinSortedExpansionQueue);
+  friend class ExpansionQueueBase<MinSortedExpansionQueue<StateT, ValueT, StateValueAllocatorT>>;
 };
 
 

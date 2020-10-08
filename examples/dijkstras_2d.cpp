@@ -73,7 +73,7 @@ private:
   /**
    * @copydoc StateBase::id
    */
-  inline std::size_t CRTP_OVERRIDE_M(id)() const
+  inline std::size_t id_impl() const
   {
     static_assert(sizeof(std::size_t) == sizeof(Indices), "Cannot pack Indices into std::size_t");
     std::size_t hash_value = 0;
@@ -84,7 +84,7 @@ private:
   /**
    * @copydoc StateBase::operator==
    */
-  inline bool CRTP_OVERRIDE_M(equals)(const State2D& other) const
+  inline bool equals_impl(const State2D& other) const
   {
     return this->indices_ == other.indices_;
   }
@@ -98,7 +98,7 @@ private:
     return os << '(' << state.indices_ << ')';
   }
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(StateBase, State2D);
+  friend class StateBase<State2D>;
 };
 
 
@@ -108,13 +108,13 @@ private:
   /**
    * @copydoc MetricBase::get_value
    */
-  inline int CRTP_OVERRIDE_M(get_value)(const State2D& parent, const State2D& child) const
+  inline int get_value_impl(const State2D& parent, const State2D& child) const
   {
     return std::abs(parent.indices_.x - child.indices_.x) +
            std::abs(parent.indices_.y - child.indices_.y);
   }
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(MetricBase, ManhattanDistanceState2D);
+  friend class MetricBase<ManhattanDistanceState2D>;
 };
 
 
@@ -133,7 +133,7 @@ private:
    * @copydoc StateSpaceBase::for_each_child
    */
   template<typename UnaryChildFn>
-  inline bool CRTP_OVERRIDE_M(for_each_child)(const State2D& parent, UnaryChildFn&& child_fn)
+  inline bool for_each_child_impl(const State2D& parent, UnaryChildFn&& child_fn)
   {
     for (int dx : std::array<int, 2>{-1, 1})
     {
@@ -149,7 +149,7 @@ private:
     return true;
   }
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(StateSpaceBase, GridStateSpace2D);
+  friend class StateSpaceBase<GridStateSpace2D>;
 };
 
 

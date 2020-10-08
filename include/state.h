@@ -6,8 +6,8 @@
 #include <functional>
 #include <type_traits>
 
-// CRTP
-#include <crtp/crtp.h>
+// MMPL
+#include <mmpl/crtp.h>
 
 namespace mmpl
 {
@@ -28,12 +28,12 @@ public:
 
   inline IDType id() const
   {
-    return CRTP_INDIRECT_M(id)();
+    return this->derived()->id_impl();
   }
 
   inline bool operator==(const DerivedT& other) const
   {
-    return CRTP_INDIRECT_M(equals)(other);
+    return this->derived()->equals_impl(other);
   }
 
 private:

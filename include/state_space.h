@@ -4,10 +4,8 @@
 // C++ Standard Library
 #include <type_traits>
 
-// CRTP
-#include <crtp/crtp.h>
-
 // MMPL
+#include <mmpl/crtp.h>
 #include <mmpl/metric.h>
 #include <mmpl/state.h>
 #include <mmpl/support.h>
@@ -32,7 +30,7 @@ public:
   template<typename UnaryChildFn>
   inline bool for_each_child(const StateType& parent, UnaryChildFn&& child_fn)
   {
-    return CRTP_INDIRECT_M(for_each_child)(parent, std::forward<UnaryChildFn>(child_fn));
+    return this->derived()->for_each_child_impl(parent, std::forward<UnaryChildFn>(child_fn));
   }
 
 private:

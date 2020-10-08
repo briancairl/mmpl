@@ -3,7 +3,7 @@ cc_test(
     srcs=["state_space.cpp"],
     copts=["-Iexternal/googletest/googletest/include"],
     deps=[
-        "//:core",
+        "//:mmpl",
         "@googletest//:gtest",
     ],
     timeout="short",
@@ -15,7 +15,7 @@ cc_test(
     srcs=["value.cpp"],
     copts=["-Iexternal/googletest/googletest/include"],
     deps=[
-        "//:core",
+        "//:mmpl",
         "@googletest//:gtest",
     ],
     timeout="short",

@@ -1,10 +1,7 @@
 cc_library(
-  name="core",
+  name="mmpl",
   hdrs=glob(["include/*"]),
   strip_include_prefix="include",
   include_prefix="mmpl",
-  deps=[
-    "@crtp//:crtp",
-  ],
   visibility=["//visibility:public"],
 )

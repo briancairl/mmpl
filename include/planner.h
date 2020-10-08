@@ -9,10 +9,8 @@
 #include <type_traits>
 #include <utility>
 
-// CRTP
-#include <crtp/crtp.h>
-
 // MMPL
+#include <mmpl/crtp.h>
 #include <mmpl/expansion_queue.h>
 #include <mmpl/expansion_table.h>
 #include <mmpl/metric.h>
@@ -185,14 +183,12 @@ template<typename StateT,
          typename ExpansionTableT = UnorderedExpansionTable<StateT, ValueT>>
 class ShortestPathPlanner : public PlannerBase<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>
 {
+  using PlannerBaseType = PlannerBase<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>;
 public:
   template<typename... ArgTs>
   explicit ShortestPathPlanner(ArgTs&&... args) :
     PlannerBaseType{std::forward<ArgTs>(args)...}
   {}
-
-private:
-  IMPLEMENT_CRTP_DERIVED_CLASS(PlannerBase, ShortestPathPlanner);
 };
 
 

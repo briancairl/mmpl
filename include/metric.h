@@ -3,10 +3,8 @@
 
 // C++ Standard Library
 
-// CRTP
-#include <crtp/crtp.h>
-
 // MMPL
+#include <mmpl/crtp.h>
 #include <mmpl/state.h>
 #include <mmpl/support.h>
 #include <mmpl/value.h>
@@ -35,7 +33,7 @@ public:
 
   inline ValueType operator()(const StateType& parent, const StateType& child)
   {
-    return CRTP_INDIRECT_M(get_value)(parent, child);
+    return this->derived()->get_value_impl(parent, child);
   }
 
 private:
