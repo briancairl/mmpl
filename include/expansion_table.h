@@ -5,10 +5,8 @@
 #include <ostream>
 #include <unordered_map>
 
-// CRTP
-#include <crtp/crtp.h>
-
 // MMPL
+#include <mmpl/crtp.h>
 #include <mmpl/state.h>
 #include <mmpl/support.h>
 #include <mmpl/value.h>
@@ -17,23 +15,21 @@
 namespace mmpl
 {
 
-template<typename ExpansionTableT>
-struct ExpansionTableTraits;
+template <typename ExpansionTableT> struct ExpansionTableTraits;
 
 
-template<typename ExpansionTableT>
+template <typename ExpansionTableT>
 using expansion_table_state_t = typename ExpansionTableTraits<ExpansionTableT>::StateType;
 
 
-template<typename ExpansionTableT>
+template <typename ExpansionTableT>
 using expansion_table_value_t = typename ExpansionTableTraits<ExpansionTableT>::ValueType;
 
 
 /**
  * @brief Defines and interface for an object used to query state expansion
  */
-template<typename DerivedT>
-struct ExpansionTableBase
+template <typename DerivedT> struct ExpansionTableBase
 {
 public:
   /// Planning state type
@@ -45,10 +41,7 @@ public:
   /**
    * @brief Resets internal state of table
    */
-  inline void reset()
-  {
-    CRTP_INDIRECT_M(reset)();
-  }
+  inline void reset() { this->derived()->reset_impl(); }
 
   /**
    * @brief Sets next expanded state
@@ -62,7 +55,7 @@ public:
    */
   inline bool expand(const StateType& parent, const StateType& child, const ValueType& total_value)
   {
-    return CRTP_INDIRECT_M(expand)(parent, child, total_value);
+    return this->derived()->expand_impl(parent, child, total_value);
   }
 
   /**
@@ -73,10 +66,7 @@ public:
    * @retval true  if <code>query</code> state has been expanded
    * @retval false  otherwise
    */
-  inline bool is_expanded(const StateType& query) const
-  {
-    return CRTP_INDIRECT_M(is_expanded)(query);
-  }
+  inline bool is_expanded(const StateType& query) const { return this->derived()->is_expanded_impl(query); }
 
   /**
    * @brief Returns predecessor state for a given <code>query</code> state
@@ -88,7 +78,7 @@ public:
   inline StateType get_parent(const StateType& query) const
   {
     MMPL_RUNTIME_ASSERT(is_expanded(query));
-    return CRTP_INDIRECT_M(get_parent)(query);
+    return this->derived()->get_parent_impl(query);
   }
 
   /**
@@ -103,7 +93,7 @@ public:
   inline ValueType get_total_value(const StateType& query) const
   {
     MMPL_RUNTIME_ASSERT(is_expanded(query));
-    return CRTP_INDIRECT_M(get_total_value)(query);
+    return this->derived()->get_total_value_impl(query);
   }
 
   /**
@@ -116,7 +106,7 @@ public:
    */
   inline ValueType try_get_total_value(const StateType& query) const
   {
-    return is_expanded(query) ? CRTP_INDIRECT_M(get_total_value)(query) : Invalid<ValueType>::value;
+    return is_expanded(query) ? this->derived()->get_total_value_impl(query) : Invalid<ValueType>::value;
   }
 
 private:
@@ -126,10 +116,11 @@ private:
 };
 
 
-template<typename OutputIteratorT, typename ExpansionTableT>
-OutputIteratorT generate_reverse_path(OutputIteratorT output,
-                                      expansion_table_state_t<ExpansionTableT> terminal,
-                                      const ExpansionTableBase<ExpansionTableT>& expansion_table)
+template <typename OutputIteratorT, typename ExpansionTableT>
+OutputIteratorT generate_reverse_path(
+  OutputIteratorT output,
+  expansion_table_state_t<ExpansionTableT> terminal,
+  const ExpansionTableBase<ExpansionTableT>& expansion_table)
 {
   using ValueType = expansion_table_value_t<ExpansionTableT>;
 
@@ -143,11 +134,12 @@ OutputIteratorT generate_reverse_path(OutputIteratorT output,
 }
 
 
-template<typename OutputIteratorT, typename LastOutputIteratorT, typename ExpansionTableT>
-OutputIteratorT generate_reverse_path(OutputIteratorT output,
-                                      LastOutputIteratorT last,
-                                      expansion_table_state_t<ExpansionTableT> terminal,
-                                      const ExpansionTableBase<ExpansionTableT>& expansion_table)
+template <typename OutputIteratorT, typename LastOutputIteratorT, typename ExpansionTableT>
+OutputIteratorT generate_reverse_path(
+  OutputIteratorT output,
+  LastOutputIteratorT last,
+  expansion_table_state_t<ExpansionTableT> terminal,
+  const ExpansionTableBase<ExpansionTableT>& expansion_table)
 {
   using ValueType = expansion_table_value_t<ExpansionTableT>;
 
@@ -169,19 +161,20 @@ OutputIteratorT generate_reverse_path(OutputIteratorT output,
 }
 
 
-template<typename ExpansionTableT>
-struct is_expansion_table :
-  std::integral_constant<bool, std::is_base_of<ExpansionTableBase<ExpansionTableT>, ExpansionTableT>::value> {};
+template <typename ExpansionTableT>
+struct is_expansion_table
+    : std::integral_constant<bool, std::is_base_of<ExpansionTableBase<ExpansionTableT>, ExpansionTableT>::value>
+{};
 
 
-template<typename StateT, typename ValueT>
+template <typename StateT, typename ValueT>
 class UnorderedExpansionTable : public ExpansionTableBase<UnorderedExpansionTable<StateT, ValueT>>
 {
 private:
   /**
    * @copydoc ExpansionTableBase::reset
    */
-  inline void CRTP_OVERRIDE_M(reset)()
+  inline void reset_impl()
   {
     child_parent_table_.clear();
     child_cost_table_.clear();
@@ -190,16 +183,15 @@ private:
   /**
    * @copydoc ExpansionTableBase::expand
    */
-  inline bool CRTP_OVERRIDE_M(expand)(const StateT& parent, const StateT& child, const ValueT& total_value)
+  inline bool expand_impl(const StateT& parent, const StateT& child, const ValueT& total_value)
   {
-    return child_parent_table_.emplace(child, parent).second and
-           child_cost_table_.emplace(child, total_value).second;
+    return child_parent_table_.emplace(child, parent).second and child_cost_table_.emplace(child, total_value).second;
   }
 
   /**
    * @copydoc ExpansionTableBase::is_expanded
    */
-  inline bool CRTP_OVERRIDE_M(is_expanded)(const StateT& query) const
+  inline bool is_expanded_impl(const StateT& query) const
   {
     return child_parent_table_.find(query) != child_parent_table_.end();
   }
@@ -207,18 +199,12 @@ private:
   /**
    * @copydoc ExpansionTableBase::get_parent
    */
-  inline StateT CRTP_OVERRIDE_M(get_parent)(const StateT& query) const
-  {
-    return child_parent_table_.find(query)->second;
-  }
+  inline StateT get_parent_impl(const StateT& query) const { return child_parent_table_.find(query)->second; }
 
   /**
    * @copydoc ExpansionTableBase::get_total_value
    */
-  inline ValueT CRTP_OVERRIDE_M(get_total_value)(const StateT& query) const
-  {
-    return child_cost_table_.find(query)->second;
-  }
+  inline ValueT get_total_value_impl(const StateT& query) const { return child_cost_table_.find(query)->second; }
 
   /// [child, total_cost] mapping
   std::unordered_map<StateT, ValueT, state_default_hash_t<StateT>> child_cost_table_;
@@ -226,31 +212,31 @@ private:
   /// [child, parent] mapping
   std::unordered_map<StateT, StateT, state_default_hash_t<StateT>> child_parent_table_;
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(ExpansionTableBase, UnorderedExpansionTable);
+  friend class ExpansionTableBase<UnorderedExpansionTable<StateT, ValueT>>;
 };
 
 
-template<typename StateT, typename ValueT>
-struct ExpansionTableTraits<UnorderedExpansionTable<StateT, ValueT>>
+template <typename StateT, typename ValueT> struct ExpansionTableTraits<UnorderedExpansionTable<StateT, ValueT>>
 {
   using StateType = StateT;
   using ValueType = ValueT;
 };
 
 
-template<typename UnderlyingT>
+template <typename UnderlyingT>
 class ExpansionTableOutputStreamHook : public ExpansionTableBase<ExpansionTableOutputStreamHook<UnderlyingT>>
 {
 public:
-  ExpansionTableOutputStreamHook(std::ostream& os,
-                                 const bool on_expansion = true,
-                                 const bool on_parent_lookup = true,
-                                 UnderlyingT&& underlying = UnderlyingT{}) :
-    os_{std::addressof(os)},
-    expansion_count_{0UL},
-    on_expansion_{on_expansion},
-    on_parent_lookup_{on_parent_lookup},
-    underlying_{std::move(underlying)}
+  ExpansionTableOutputStreamHook(
+    std::ostream& os,
+    const bool on_expansion = true,
+    const bool on_parent_lookup = true,
+    UnderlyingT&& underlying = UnderlyingT{}) :
+      os_{std::addressof(os)},
+      expansion_count_{0UL},
+      on_expansion_{on_expansion},
+      on_parent_lookup_{on_parent_lookup},
+      underlying_{std::move(underlying)}
   {}
 
 private:
@@ -260,7 +246,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::reset
    */
-  inline void CRTP_OVERRIDE_M(reset)()
+  inline void reset_impl()
   {
     expansion_count_ = 0UL;
     (*os_) << "table reset" << std::endl;
@@ -270,11 +256,11 @@ private:
   /**
    * @copydoc ExpansionTableBase::expand
    */
-  inline bool CRTP_OVERRIDE_M(expand)(const StateType& parent, const StateType& child, const ValueType& total_value)
+  inline bool expand_impl(const StateType& parent, const StateType& child, const ValueType& total_value)
   {
     if (underlying_.expand(parent, child, total_value))
     {
-      ++expansion_count_; 
+      ++expansion_count_;
     }
     else
     {
@@ -282,7 +268,8 @@ private:
     }
     if (on_expansion_)
     {
-      (*os_) << "expand : (count = " << expansion_count_ << ") " << parent << " --> " << child << ", value : " << total_value << std::endl;
+      (*os_) << "expand : (count = " << expansion_count_ << ") " << parent << " --> " << child
+             << ", value : " << total_value << std::endl;
     }
     return true;
   }
@@ -290,15 +277,12 @@ private:
   /**
    * @copydoc ExpansionTableBase::is_expanded
    */
-  inline bool CRTP_OVERRIDE_M(is_expanded)(const StateType& query) const
-  {
-    return underlying_.is_expanded(query);
-  }
+  inline bool is_expanded_impl(const StateType& query) const { return underlying_.is_expanded(query); }
 
   /**
    * @copydoc ExpansionTableBase::get_parent
    */
-  inline StateType CRTP_OVERRIDE_M(get_parent)(const StateType& query) const
+  inline StateType get_parent_impl(const StateType& query) const
   {
     const StateType parent = underlying_.get_parent(query);
     if (on_parent_lookup_)
@@ -311,10 +295,7 @@ private:
   /**
    * @copydoc ExpansionTableBase::get_total_value
    */
-  inline ValueType CRTP_OVERRIDE_M(get_total_value)(const StateType& query) const
-  {
-    return underlying_.get_total_value(query);
-  }
+  inline ValueType get_total_value_impl(const StateType& query) const { return underlying_.get_total_value(query); }
 
   /// Logger
   std::ostream* os_;
@@ -331,12 +312,13 @@ private:
   /// Underlying expansion table
   UnderlyingT underlying_;
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(ExpansionTableBase, ExpansionTableOutputStreamHook);
+  friend ExpansionTableBase<ExpansionTableOutputStreamHook<UnderlyingT>>;
 };
 
 
-template<typename UnderlyingT>
-struct ExpansionTableTraits<ExpansionTableOutputStreamHook<UnderlyingT>> : ExpansionTableTraits<UnderlyingT> {};
+template <typename UnderlyingT>
+struct ExpansionTableTraits<ExpansionTableOutputStreamHook<UnderlyingT>> : ExpansionTableTraits<UnderlyingT>
+{};
 
 }  // namespace mmpl
 

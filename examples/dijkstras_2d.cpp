@@ -1,9 +1,9 @@
 // C++ Standard Library
 #include <array>
-#include <cstring>
 #include <chrono>
-#include <iostream>
+#include <cstring>
 #include <iomanip>
+#include <iostream>
 
 // TwoD
 #include <twod/coordinates.h>
@@ -11,8 +11,8 @@
 #include <twod/stream.h>
 
 // MMPL
-#include <mmpl/planner.h>
 #include <mmpl/metric.h>
+#include <mmpl/planner.h>
 #include <mmpl/state.h>
 #include <mmpl/state_space.h>
 #include <mmpl/termination_criteria.h>
@@ -30,23 +30,20 @@ class GridStateSpace2D;
 namespace mmpl
 {
 
-template<>
-struct StateTraits<::State2D>
+template <> struct StateTraits<::State2D>
 {
   using IDType = std::size_t;
 };
 
 
-template<>
-struct MetricTraits<::ManhattanDistanceState2D>
+template <> struct MetricTraits<::ManhattanDistanceState2D>
 {
   using StateType = State2D;
   using ValueType = int;
 };
 
 
-template<>
-struct StateSpaceTraits<::GridStateSpace2D>
+template <> struct StateSpaceTraits<::GridStateSpace2D>
 {
   using StateType = State2D;
 };
@@ -57,14 +54,9 @@ struct StateSpaceTraits<::GridStateSpace2D>
 class State2D : public StateBase<State2D>
 {
 public:
-  State2D(int _x, int _y) :
-    indices_{_x, _y}
-  {}
+  State2D(int _x, int _y) : indices_{_x, _y} {}
 
-  inline operator Indices() const
-  {
-    return indices_;
-  }
+  inline operator Indices() const { return indices_; }
 
 private:
   /// Indices
@@ -73,7 +65,7 @@ private:
   /**
    * @copydoc StateBase::id
    */
-  inline std::size_t CRTP_OVERRIDE_M(id)() const
+  inline std::size_t id_impl() const
   {
     static_assert(sizeof(std::size_t) == sizeof(Indices), "Cannot pack Indices into std::size_t");
     std::size_t hash_value = 0;
@@ -84,10 +76,7 @@ private:
   /**
    * @copydoc StateBase::operator==
    */
-  inline bool CRTP_OVERRIDE_M(equals)(const State2D& other) const
-  {
-    return this->indices_ == other.indices_;
-  }
+  inline bool equals_impl(const State2D& other) const { return this->indices_ == other.indices_; }
 
   friend class GridStateSpace2D;
 
@@ -98,7 +87,7 @@ private:
     return os << '(' << state.indices_ << ')';
   }
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(StateBase, State2D);
+  friend class StateBase<State2D>;
 };
 
 
@@ -108,22 +97,19 @@ private:
   /**
    * @copydoc MetricBase::get_value
    */
-  inline int CRTP_OVERRIDE_M(get_value)(const State2D& parent, const State2D& child) const
+  inline int get_value_impl(const State2D& parent, const State2D& child) const
   {
-    return std::abs(parent.indices_.x - child.indices_.x) +
-           std::abs(parent.indices_.y - child.indices_.y);
+    return std::abs(parent.indices_.x - child.indices_.x) + std::abs(parent.indices_.y - child.indices_.y);
   }
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(MetricBase, ManhattanDistanceState2D);
+  friend class MetricBase<ManhattanDistanceState2D>;
 };
 
 
 class GridStateSpace2D : public StateSpaceBase<GridStateSpace2D>
 {
 public:
-  explicit GridStateSpace2D(Extents extents) :
-    bounds_{Indices{0, 0}, extents}
-  {}
+  explicit GridStateSpace2D(Extents extents) : bounds_{Indices{0, 0}, extents} {}
 
 private:
   /// Planning bounds
@@ -132,8 +118,7 @@ private:
   /**
    * @copydoc StateSpaceBase::for_each_child
    */
-  template<typename UnaryChildFn>
-  inline bool CRTP_OVERRIDE_M(for_each_child)(const State2D& parent, UnaryChildFn&& child_fn)
+  template <typename UnaryChildFn> inline bool for_each_child_impl(const State2D& parent, UnaryChildFn&& child_fn)
   {
     for (int dx : std::array<int, 2>{-1, 1})
     {
@@ -149,7 +134,7 @@ private:
     return true;
   }
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(StateSpaceBase, GridStateSpace2D);
+  friend class StateSpaceBase<GridStateSpace2D>;
 };
 
 
@@ -162,10 +147,8 @@ int main(int argc, char** argv)
   using ExpansionTableType = ExpansionTableOutputStreamHook<UnorderedExpansionTable<State2D, int>>;
 
   // Create the planner
-  ShortestPathPlanner<State2D, int, ExpansionQueueType, ExpansionTableType> planner{
-    ExpansionQueueType{},
-    ExpansionTableType{std::cout}
-  };
+  ShortestPathPlanner<State2D, int, ExpansionQueueType, ExpansionTableType> planner{ExpansionQueueType{},
+                                                                                    ExpansionTableType{std::cout}};
 
   // Create the metric
   ManhattanDistanceState2D metric;
@@ -183,7 +166,9 @@ int main(int argc, char** argv)
 
   // Get approximate time to plan
   using DFloat = std::chrono::duration<float>;
-  std::cout << "t plan: " << std::chrono::duration_cast<DFloat>(std::chrono::high_resolution_clock::now() - t_start).count() << std::endl;
+  std::cout << "t plan: "
+            << std::chrono::duration_cast<DFloat>(std::chrono::high_resolution_clock::now() - t_start).count()
+            << std::endl;
 
   // Show some meta-information
   std::cout << "code  : " << code << std::endl;

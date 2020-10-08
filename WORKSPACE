@@ -3,19 +3,12 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 
-# CRTP
-git_repository(
-    name="crtp",
-    commit="f3f9e36411529f6a771d77a6f9c4c955b1eb5b90",
-    remote="git@github.com:briancairl/crtp.git",
-)
-
-
 # TwoD
 git_repository(
-    name="twod",
-    commit="0736e09bd85b1f2fad9c309f3a03e1c61e0cd718",
-    remote="git@github.com:briancairl/twod.git",
+  name="twod",
+  remote="https://github.com/briancairl/twod.git",
+  commit="cdfc4a6b74dd7a06abac8217bf908dc1fe039c5a",
+  shallow_since="1602129003 -0700"
 )
 
 

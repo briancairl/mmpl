@@ -9,10 +9,8 @@
 #include <type_traits>
 #include <utility>
 
-// CRTP
-#include <crtp/crtp.h>
-
 // MMPL
+#include <mmpl/crtp.h>
 #include <mmpl/expansion_queue.h>
 #include <mmpl/expansion_table.h>
 #include <mmpl/metric.h>
@@ -31,24 +29,19 @@ namespace mmpl
  *        - ValueType (derived from MetricValueBase)
  *        - StateType (derived from StateBase)
  */
-template<typename T>
-struct PlannerTraits;
+template <typename T> struct PlannerTraits;
 
 
-template<typename PlannerT>
-using planner_expansion_table_t = typename PlannerTraits<PlannerT>::ExpansionTableType;
+template <typename PlannerT> using planner_expansion_table_t = typename PlannerTraits<PlannerT>::ExpansionTableType;
 
 
-template<typename PlannerT>
-using planner_expansion_queue_t = typename PlannerTraits<PlannerT>::ExpansionQueueType;
+template <typename PlannerT> using planner_expansion_queue_t = typename PlannerTraits<PlannerT>::ExpansionQueueType;
 
 
-template<typename PlannerT>
-using planner_state_t = typename PlannerTraits<PlannerT>::StateType;
+template <typename PlannerT> using planner_state_t = typename PlannerTraits<PlannerT>::StateType;
 
 
-template<typename PlannerT>
-using planner_value_t = typename PlannerTraits<PlannerT>::ValueType;
+template <typename PlannerT> using planner_value_t = typename PlannerTraits<PlannerT>::ValueType;
 
 
 struct PlannerCode
@@ -60,26 +53,17 @@ struct PlannerCode
     SEARCHING,
   };
 
-  constexpr PlannerCode(Value _value = Value::SEARCHING) :
-    value{_value}
-  {}
+  constexpr PlannerCode(Value _value = Value::SEARCHING) : value{_value} {}
 
-  constexpr operator Value() const
-  {
-    return value;
-  }
+  constexpr operator Value() const { return value; }
 
-  constexpr operator bool() const
-  {
-    return value == Value::GOAL_FOUND;
-  }
+  constexpr operator bool() const { return value == Value::GOAL_FOUND; }
 
   Value value;
 };
 
 
-template<typename DerivedT>
-class PlannerBase
+template <typename DerivedT> class PlannerBase
 {
 public:
   using ExpansionTableType = planner_expansion_table_t<DerivedT>;
@@ -87,10 +71,11 @@ public:
   using StateType = planner_state_t<DerivedT>;
   using ValueType = planner_value_t<DerivedT>;
 
-  template<typename MetricT, typename StateSpaceT, typename TerminationCriteriaT>
-  PlannerCode update(MetricBase<MetricT>& metric,
-                     StateSpaceBase<StateSpaceT>& state_space,
-                     TerminationCriteriaBase<TerminationCriteriaT>& termination_criteria)
+  template <typename MetricT, typename StateSpaceT, typename TerminationCriteriaT>
+  PlannerCode update(
+    MetricBase<MetricT>& metric,
+    StateSpaceBase<StateSpaceT>& state_space,
+    TerminationCriteriaBase<TerminationCriteriaT>& termination_criteria)
   {
     // Abort if there is nothing left in the queue
     if (expansion_queue_.empty())
@@ -102,24 +87,22 @@ public:
     const auto pred = expansion_queue_.next();
 
     // Enqueue next states from active parent
-    const auto enqueue_valid =
-      [this, &metric, &pred](const StateType& child)
+    const auto enqueue_valid = [this, &metric, &pred](const StateType& child) {
+      // Dont enqueue if already expanded
+      if (expansion_table_.is_expanded(child))
       {
-        // Dont enqueue if already expanded
-        if (expansion_table_.is_expanded(child))
-        {
-          return;
-        }
+        return;
+      }
 
-        // Get cost from start to child
-        const ValueType next_total_value = pred.value + metric(pred.state, child);
+      // Get cost from start to child
+      const ValueType next_total_value = pred.value + metric(pred.state, child);
 
-        // Update expansion information
-        if (expansion_table_.expand(pred.state, child, next_total_value))
-        {
-          expansion_queue_.enqueue(child, next_total_value);
-        }
-      };
+      // Update expansion information
+      if (expansion_table_.expand(pred.state, child, next_total_value))
+      {
+        expansion_queue_.enqueue(child, next_total_value);
+      }
+    };
 
     // Check if search is terminated
     if (termination_criteria.is_terminal(pred.state))
@@ -148,23 +131,17 @@ public:
     expansion_table_.expand(state, state, Null<ValueType>::value);
   }
 
-  inline const ExpansionTableType& expansion_table() const
-  {
-    return expansion_table_;
-  }
+  inline const ExpansionTableType& expansion_table() const { return expansion_table_; }
 
-  inline const ExpansionQueueType& expansion_queue() const
-  {
-    return expansion_queue_;
-  }
+  inline const ExpansionQueueType& expansion_queue() const { return expansion_queue_; }
 
 protected:
-  template<typename ExpansionQueueT = ExpansionQueueType,
-           typename ExpansionTableT = ExpansionTableType>
-  explicit PlannerBase(ExpansionQueueT&& queue = ExpansionQueueType{},
-                       ExpansionTableT&& expansion = ExpansionTableType{}) :
-    expansion_queue_{std::forward<ExpansionQueueT>(queue)},
-    expansion_table_{std::forward<ExpansionTableT>(expansion)}
+  template <typename ExpansionQueueT = ExpansionQueueType, typename ExpansionTableT = ExpansionTableType>
+  explicit PlannerBase(
+    ExpansionQueueT&& queue = ExpansionQueueType{},
+    ExpansionTableT&& expansion = ExpansionTableType{}) :
+      expansion_queue_{std::forward<ExpansionQueueT>(queue)},
+      expansion_table_{std::forward<ExpansionTableT>(expansion)}
   {}
 
   /// Expansion queue
@@ -179,29 +156,29 @@ private:
 };
 
 
-template<typename StateT,
-         typename ValueT,
-         typename ExpansionQueueT = MinSortedExpansionQueue<StateT, ValueT>,
-         typename ExpansionTableT = UnorderedExpansionTable<StateT, ValueT>>
+template <
+  typename StateT,
+  typename ValueT,
+  typename ExpansionQueueT = MinSortedExpansionQueue<StateT, ValueT>,
+  typename ExpansionTableT = UnorderedExpansionTable<StateT, ValueT>>
 class ShortestPathPlanner : public PlannerBase<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>
 {
-public:
-  template<typename... ArgTs>
-  explicit ShortestPathPlanner(ArgTs&&... args) :
-    PlannerBaseType{std::forward<ArgTs>(args)...}
-  {}
+  using PlannerBaseType = PlannerBase<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>;
 
-private:
-  IMPLEMENT_CRTP_DERIVED_CLASS(PlannerBase, ShortestPathPlanner);
+public:
+  template <typename... ArgTs>
+  explicit ShortestPathPlanner(ArgTs&&... args) : PlannerBaseType{std::forward<ArgTs>(args)...}
+  {}
 };
 
 
-template<typename PlannerT, typename MetricT, typename StateSpaceT>
-std::pair<PlannerCode, std::size_t> run_plan(PlannerBase<PlannerT>& planner,
-                                             MetricBase<MetricT>& metric,
-                                             StateSpaceBase<StateSpaceT>& state_space,
-                                             const planner_state_t<PlannerT>& start,
-                                             const planner_state_t<PlannerT>& goal)
+template <typename PlannerT, typename MetricT, typename StateSpaceT>
+std::pair<PlannerCode, std::size_t> run_plan(
+  PlannerBase<PlannerT>& planner,
+  MetricBase<MetricT>& metric,
+  StateSpaceBase<StateSpaceT>& state_space,
+  const planner_state_t<PlannerT>& start,
+  const planner_state_t<PlannerT>& goal)
 {
   planner.enqueue(start);
 
@@ -219,7 +196,7 @@ std::pair<PlannerCode, std::size_t> run_plan(PlannerBase<PlannerT>& planner,
 }
 
 
-template<typename StateT, typename ValueT, typename ExpansionQueueT, typename ExpansionTableT>
+template <typename StateT, typename ValueT, typename ExpansionQueueT, typename ExpansionTableT>
 struct PlannerTraits<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>
 {
   using StateType = StateT;
@@ -233,14 +210,14 @@ inline std::ostream& operator<<(std::ostream& os, const PlannerCode code)
 {
   switch (static_cast<PlannerCode::Value>(code))
   {
-    case PlannerCode::GOAL_FOUND:
-      return os << "GOAL_FOUND";
-    case PlannerCode::INFEASIBLE:
-      return os << "INFEASIBLE";
-    case PlannerCode::SEARCHING:
-      return os << "SEARCHING";
-    default:
-      break;
+  case PlannerCode::GOAL_FOUND:
+    return os << "GOAL_FOUND";
+  case PlannerCode::INFEASIBLE:
+    return os << "INFEASIBLE";
+  case PlannerCode::SEARCHING:
+    return os << "SEARCHING";
+  default:
+    break;
   }
   return os << "PlannerCode<invalid>";
 }
@@ -248,4 +225,3 @@ inline std::ostream& operator<<(std::ostream& os, const PlannerCode code)
 }  // namespace mmpl
 
 #endif  // MMPL_PLANNER_H
-

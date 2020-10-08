@@ -6,9 +6,8 @@
 #include <gtest/gtest.h>
 
 // TwoD
-#include <mmpl/state_space.h>
 #include <mmpl/metric.h>
-
+#include <mmpl/state_space.h>
 
 using namespace mmpl;
 
@@ -18,9 +17,7 @@ namespace mmpl
 class TestStateSpace;
 class TestState;
 
-
-template<>
-struct StateTraits<TestState>
+template <> struct StateTraits<TestState>
 {
   using IDType = int;
 };
@@ -29,53 +26,41 @@ struct StateTraits<TestState>
 class TestState : public StateBase<TestState>
 {
 private:
-  inline int CRTP_OVERRIDE_M(id)() const
-  {
-    return 1;
-  }
+  inline int id_impl() const { return 1; }
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(StateBase, TestState);
+  friend class StateBase<TestState>;
 };
 
 
-namespace mmpl
-{
-
-template<>
-struct StateSpaceTraits<TestStateSpace>
+template <> struct StateSpaceTraits<TestStateSpace>
 {
   using StateType = TestState;
 };
 
-}  // namespace mmpl
-
-
 class TestStateSpace : public StateSpaceBase<TestStateSpace>
 {
 public:
-
 private:
-  template<typename StateT, typename UnaryFnT>
-  inline bool CRTP_OVERRIDE_M(for_each_child)(const StateT& parent, const UnaryFnT& child_fn)
+  template <typename StateT, typename UnaryFnT>
+  inline bool for_each_child_impl(const StateT& parent, const UnaryFnT& child_fn)
   {
     return true;
   }
 
-  IMPLEMENT_CRTP_DERIVED_CLASS(StateSpaceBase, TestStateSpace);
+  friend class StateSpaceBase<TestStateSpace>;
 };
 
-};
-
+}  // namespace mmpl
 
 TEST(StateSpace, ForEachChild)
 {
-  TestStateSpace state_space;
+  mmpl::TestStateSpace state_space;
 
-  ASSERT_TRUE(state_space.for_each_child(TestState{}, [](const TestState& child) {}));
+  ASSERT_TRUE(state_space.for_each_child(mmpl::TestState{}, [](const mmpl::TestState& child) {}));
 }
 
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

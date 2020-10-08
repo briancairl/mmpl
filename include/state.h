@@ -6,47 +6,38 @@
 #include <functional>
 #include <type_traits>
 
-// CRTP
-#include <crtp/crtp.h>
+// MMPL
+#include <mmpl/crtp.h>
 
 namespace mmpl
 {
 
-template<typename T>
-struct StateTraits;
+template <typename T> struct StateTraits;
 
 
-template<typename StateT>
-using state_id_t = typename StateTraits<StateT>::IDType;
+template <typename StateT> using state_id_t = typename StateTraits<StateT>::IDType;
 
 
-template<typename DerivedT>
-struct StateBase
+template <typename DerivedT> struct StateBase
 {
 public:
   using IDType = state_id_t<DerivedT>;
 
-  inline IDType id() const
-  {
-    return CRTP_INDIRECT_M(id)();
-  }
+  inline IDType id() const { return this->derived()->id_impl(); }
 
-  inline bool operator==(const DerivedT& other) const
-  {
-    return CRTP_INDIRECT_M(equals)(other);
-  }
+  inline bool operator==(const DerivedT& other) const { return this->derived()->equals_impl(other); }
 
 private:
   IMPLEMENT_CRTP_BASE_CLASS(StateBase, DerivedT);
 };
 
 
-template<typename T>
-using state_default_hash_t = ::std::hash<StateBase<T>>;
+template <typename T> using state_default_hash_t = ::std::hash<StateBase<T>>;
 
 
-template<typename StateT>
-struct is_state : std::integral_constant<bool, std::is_base_of<StateBase<StateT>, StateT>::value> {};
+template <typename StateT>
+struct is_state : std::integral_constant<bool, std::is_base_of<StateBase<StateT>, StateT>::value>
+{};
 
 }  // namespace mmpl
 
@@ -54,16 +45,13 @@ struct is_state : std::integral_constant<bool, std::is_base_of<StateBase<StateT>
 namespace std
 {
 
-template<typename StateT>
-struct hash<::mmpl::StateBase<StateT>>
+template <typename StateT> struct hash<::mmpl::StateBase<StateT>>
 {
-  static_assert(std::is_convertible<::mmpl::state_id_t<StateT>, std::size_t>(),
-                "Opaque ID-type associated StateT must be convertible to std::size_t");
+  static_assert(
+    std::is_convertible<::mmpl::state_id_t<StateT>, std::size_t>(),
+    "Opaque ID-type associated StateT must be convertible to std::size_t");
 
-  inline std::size_t operator()(const ::mmpl::StateBase<StateT>& state) const
-  {
-    return state.id();
-  }
+  inline std::size_t operator()(const ::mmpl::StateBase<StateT>& state) const { return state.id(); }
 };
 
 }  // namespace mmpl
