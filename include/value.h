@@ -55,8 +55,6 @@ public:
    */
   constexpr HeuristicValue(ValueT _g_value, HeuristicT _h_value) : value{_g_value + _h_value}, heuristic{_h_value} {}
 
-  constexpr operator ValueT() const { return this->g(); }
-
   constexpr ValueT g() const { return this->value - this->heuristic; }
 
   constexpr ValueT f() const { return this->value; }
