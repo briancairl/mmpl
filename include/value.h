@@ -21,6 +21,7 @@ struct is_value : std::integral_constant<bool, std::is_integral<ValueT>::value o
  */
 template <typename ValueT> struct Null
 {
+  static_assert(std::is_fundamental<ValueT>(), "ValueT must be a fundemental type");
   static constexpr ValueT value = static_cast<ValueT>(0);
 };
 
