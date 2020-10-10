@@ -21,6 +21,7 @@ struct is_value : std::integral_constant<bool, std::is_integral<ValueT>::value o
  */
 template <typename ValueT> struct Null
 {
+  static_assert(std::is_fundamental<ValueT>(), "ValueT must be a fundemental type");
   static constexpr ValueT value = static_cast<ValueT>(0);
 };
 
@@ -53,8 +54,6 @@ public:
    * @brief Intialization constructor
    */
   constexpr HeuristicValue(ValueT _g_value, HeuristicT _h_value) : value{_g_value + _h_value}, heuristic{_h_value} {}
-
-  constexpr operator ValueT() const { return this->g(); }
 
   constexpr ValueT g() const { return this->value - this->heuristic; }
 

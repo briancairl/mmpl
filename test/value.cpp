@@ -52,7 +52,7 @@ TEST(HeuristicValue, Add)
 
   ASSERT_EQ(result.f(), 10.f);
   ASSERT_EQ(result.h(), 6);
-  ASSERT_EQ(static_cast<float>(result), 4.f);
+  ASSERT_EQ(result.g(), 4.f);
 }
 
 
@@ -62,7 +62,7 @@ TEST(HeuristicValue, Subtract)
 
   ASSERT_EQ(result.f(), -4.f);
   ASSERT_EQ(result.h(), -2);
-  ASSERT_EQ(static_cast<float>(result), -2.f);
+  ASSERT_EQ(result.g(), -2.f);
 }
 
 
@@ -72,7 +72,7 @@ TEST(HeuristicValue, LHSScaling)
 
   ASSERT_EQ(result.f(), 6.f);
   ASSERT_EQ(result.h(), 4);
-  ASSERT_EQ(static_cast<float>(result), 2.f);
+  ASSERT_EQ(result.g(), 2.f);
 }
 
 
@@ -82,7 +82,7 @@ TEST(HeuristicValue, RHSScaling)
 
   ASSERT_EQ(result.f(), 9.f);
   ASSERT_EQ(result.h(), 6);
-  ASSERT_EQ(static_cast<float>(result), 3.f);
+  ASSERT_EQ(result.g(), 3.f);
 }
 
 
@@ -94,7 +94,7 @@ TEST(HeuristicValue, CompoundAdd)
 
   ASSERT_EQ(v.f(), 10.f);
   ASSERT_EQ(v.h(), 4);
-  ASSERT_EQ(static_cast<float>(v), 6.f);
+  ASSERT_EQ(v.g(), 6.f);
 }
 
 
@@ -106,7 +106,7 @@ TEST(HeuristicValue, CompoundSubtract)
 
   ASSERT_EQ(v.f(), 4.f);
   ASSERT_EQ(v.h(), 0);
-  ASSERT_EQ(static_cast<float>(v), 4.f);
+  ASSERT_EQ(v.g(), 4.f);
 }
 
 
@@ -118,7 +118,7 @@ TEST(HeuristicValue, CompoundScaling)
 
   ASSERT_EQ(v.f(), 21.f);
   ASSERT_EQ(v.h(), 6);
-  ASSERT_EQ(static_cast<float>(v), 15.f);
+  ASSERT_EQ(v.g(), 15.f);
 }
 
 
