@@ -17,6 +17,7 @@
 #include <mmpl/state_space.h>
 #include <mmpl/termination_criteria.h>
 #include <mmpl/planner_code_ostream.h>
+#include <mmpl/expansion_queue/min_sorted.h>
 
 
 using namespace twod;
@@ -144,7 +145,7 @@ int main(int argc, char** argv)
 
   const State2D goal{10, 4}, start{3, 5};
 
-  using ExpansionQueueType = MinSortedExpansionQueue<State2D, int>;
+  using ExpansionQueueType = expansion_queue::MinSorted<State2D, int>;
   using ExpansionTableType = ExpansionTableOutputStreamHook<UnorderedExpansionTable<State2D, int>>;
 
   // Create the planner

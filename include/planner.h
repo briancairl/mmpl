@@ -154,8 +154,8 @@ private:
 template <
   typename StateT,
   typename ValueT,
-  typename ExpansionQueueT = MinSortedExpansionQueue<StateT, ValueT>,
-  typename ExpansionTableT = UnorderedExpansionTable<StateT, ValueT>>
+  typename ExpansionQueueT,
+  typename ExpansionTableT>
 class ShortestPathPlanner : public PlannerBase<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>
 {
   using PlannerBaseType = PlannerBase<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>;
