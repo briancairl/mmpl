@@ -1,16 +1,11 @@
 #ifndef MMPL_EXPANSION_TABLE_H
 #define MMPL_EXPANSION_TABLE_H
 
-// C++ Standard Library
-#include <ostream>
-#include <unordered_map>
-
 // MMPL
 #include <mmpl/crtp.h>
 #include <mmpl/state.h>
 #include <mmpl/support.h>
 #include <mmpl/value.h>
-
 
 namespace mmpl
 {
@@ -164,160 +159,6 @@ OutputIteratorT generate_reverse_path(
 template <typename ExpansionTableT>
 struct is_expansion_table
     : std::integral_constant<bool, std::is_base_of<ExpansionTableBase<ExpansionTableT>, ExpansionTableT>::value>
-{};
-
-
-template <typename StateT, typename ValueT>
-class UnorderedExpansionTable : public ExpansionTableBase<UnorderedExpansionTable<StateT, ValueT>>
-{
-private:
-  /**
-   * @copydoc ExpansionTableBase::reset
-   */
-  inline void reset_impl()
-  {
-    child_parent_table_.clear();
-    child_cost_table_.clear();
-  }
-
-  /**
-   * @copydoc ExpansionTableBase::expand
-   */
-  inline bool expand_impl(const StateT& parent, const StateT& child, const ValueT& total_value)
-  {
-    return child_parent_table_.emplace(child, parent).second and child_cost_table_.emplace(child, total_value).second;
-  }
-
-  /**
-   * @copydoc ExpansionTableBase::is_expanded
-   */
-  inline bool is_expanded_impl(const StateT& query) const
-  {
-    return child_parent_table_.find(query) != child_parent_table_.end();
-  }
-
-  /**
-   * @copydoc ExpansionTableBase::get_parent
-   */
-  inline StateT get_parent_impl(const StateT& query) const { return child_parent_table_.find(query)->second; }
-
-  /**
-   * @copydoc ExpansionTableBase::get_total_value
-   */
-  inline ValueT get_total_value_impl(const StateT& query) const { return child_cost_table_.find(query)->second; }
-
-  /// [child, total_cost] mapping
-  std::unordered_map<StateT, ValueT, state_default_hash_t<StateT>> child_cost_table_;
-
-  /// [child, parent] mapping
-  std::unordered_map<StateT, StateT, state_default_hash_t<StateT>> child_parent_table_;
-
-  friend class ExpansionTableBase<UnorderedExpansionTable<StateT, ValueT>>;
-};
-
-
-template <typename StateT, typename ValueT> struct ExpansionTableTraits<UnorderedExpansionTable<StateT, ValueT>>
-{
-  using StateType = StateT;
-  using ValueType = ValueT;
-};
-
-
-template <typename UnderlyingT>
-class ExpansionTableOutputStreamHook : public ExpansionTableBase<ExpansionTableOutputStreamHook<UnderlyingT>>
-{
-public:
-  ExpansionTableOutputStreamHook(
-    std::ostream& os,
-    const bool on_expansion = true,
-    const bool on_parent_lookup = true,
-    UnderlyingT&& underlying = UnderlyingT{}) :
-      os_{std::addressof(os)},
-      expansion_count_{0UL},
-      on_expansion_{on_expansion},
-      on_parent_lookup_{on_parent_lookup},
-      underlying_{std::move(underlying)}
-  {}
-
-private:
-  using StateType = expansion_table_state_t<UnderlyingT>;
-  using ValueType = expansion_table_value_t<UnderlyingT>;
-
-  /**
-   * @copydoc ExpansionTableBase::reset
-   */
-  inline void reset_impl()
-  {
-    expansion_count_ = 0UL;
-    (*os_) << "table reset" << std::endl;
-    underlying_.reset();
-  }
-
-  /**
-   * @copydoc ExpansionTableBase::expand
-   */
-  inline bool expand_impl(const StateType& parent, const StateType& child, const ValueType& total_value)
-  {
-    if (underlying_.expand(parent, child, total_value))
-    {
-      ++expansion_count_;
-    }
-    else
-    {
-      return false;
-    }
-    if (on_expansion_)
-    {
-      (*os_) << "expand : (count = " << expansion_count_ << ") " << parent << " --> " << child
-             << ", value : " << total_value << std::endl;
-    }
-    return true;
-  }
-
-  /**
-   * @copydoc ExpansionTableBase::is_expanded
-   */
-  inline bool is_expanded_impl(const StateType& query) const { return underlying_.is_expanded(query); }
-
-  /**
-   * @copydoc ExpansionTableBase::get_parent
-   */
-  inline StateType get_parent_impl(const StateType& query) const
-  {
-    const StateType parent = underlying_.get_parent(query);
-    if (on_parent_lookup_)
-    {
-      (*os_) << "get_parent: " << parent << " --> " << query << std::endl;
-    }
-    return parent;
-  }
-
-  /**
-   * @copydoc ExpansionTableBase::get_total_value
-   */
-  inline ValueType get_total_value_impl(const StateType& query) const { return underlying_.get_total_value(query); }
-
-  /// Logger
-  std::ostream* os_;
-
-  /// Expansion count
-  std::size_t expansion_count_;
-
-  /// Toggles logs on expansion
-  bool on_expansion_;
-
-  /// Toggles on parent lookup
-  bool on_parent_lookup_;
-
-  /// Underlying expansion table
-  UnderlyingT underlying_;
-
-  friend ExpansionTableBase<ExpansionTableOutputStreamHook<UnderlyingT>>;
-};
-
-
-template <typename UnderlyingT>
-struct ExpansionTableTraits<ExpansionTableOutputStreamHook<UnderlyingT>> : ExpansionTableTraits<UnderlyingT>
 {};
 
 }  // namespace mmpl

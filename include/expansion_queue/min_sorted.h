@@ -8,9 +8,7 @@
 #include <vector>
 
 // MMPL
-#include <mmpl/state.h>
-#include <mmpl/support.h>
-#include <mmpl/value.h>
+#include <mmpl/expansion_queue.h>
 
 namespace mmpl::expansion_queue
 {
