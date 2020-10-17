@@ -4,8 +4,6 @@
 #define MMPL_PLANNER_H
 
 // C++ Standard Library
-#include <initializer_list>
-#include <ostream>
 #include <type_traits>
 #include <utility>
 
@@ -16,6 +14,7 @@
 #include <mmpl/metric.h>
 #include <mmpl/state_space.h>
 #include <mmpl/termination_criteria.h>
+#include <mmpl/planner_code.h>
 
 namespace mmpl
 {
@@ -44,25 +43,6 @@ template <typename PlannerT> using planner_state_t = typename PlannerTraits<Plan
 template <typename PlannerT> using planner_value_t = typename PlannerTraits<PlannerT>::ValueType;
 
 
-struct PlannerCode
-{
-  enum Value : std::int8_t
-  {
-    GOAL_FOUND,
-    INFEASIBLE,
-    SEARCHING,
-  };
-
-  constexpr PlannerCode(Value _value = Value::SEARCHING) : value{_value} {}
-
-  constexpr operator Value() const { return value; }
-
-  constexpr operator bool() const { return value == Value::GOAL_FOUND; }
-
-  Value value;
-};
-
-
 template <typename DerivedT> class PlannerBase
 {
 public:
@@ -77,6 +57,7 @@ public:
     StateSpaceBase<StateSpaceT>& state_space,
     TerminationCriteriaBase<TerminationCriteriaT>& termination_criteria)
   {
+
     // Abort if there is nothing left in the queue
     if (expansion_queue_.empty())
     {
@@ -105,7 +86,7 @@ public:
     };
 
     // Check if search is terminated
-    if (termination_criteria.is_terminal(pred.state))
+    if (is_terminal(termination_criteria, pred.state))
     {
       return PlannerCode::GOAL_FOUND;
     }
@@ -116,6 +97,20 @@ public:
     else
     {
       return PlannerCode::INFEASIBLE;
+    }
+  }
+
+  template <typename TerminationCriteriaT>
+  inline bool is_terminal(TerminationCriteriaBase<TerminationCriteriaT>& termination_criteria, const StateType& query)
+  {
+    if constexpr (TerminationCriteriaTraits<TerminationCriteriaT>::is_expansion_aware)
+    {
+
+      return termination_criteria.is_terminal(expansion_table_, query);
+    }
+    else
+    {
+      return termination_criteria.is_terminal(query);
     }
   }
 
@@ -159,8 +154,8 @@ private:
 template <
   typename StateT,
   typename ValueT,
-  typename ExpansionQueueT = MinSortedExpansionQueue<StateT, ValueT>,
-  typename ExpansionTableT = UnorderedExpansionTable<StateT, ValueT>>
+  typename ExpansionQueueT,
+  typename ExpansionTableT>
 class ShortestPathPlanner : public PlannerBase<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>
 {
   using PlannerBaseType = PlannerBase<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, ExpansionTableT>>;
@@ -172,11 +167,12 @@ public:
 };
 
 
-template <typename PlannerT, typename MetricT, typename StateSpaceT>
-std::pair<PlannerCode, std::size_t> run_plan(
+template <typename PlannerT, typename MetricT, typename StateSpaceT, typename TerminationCriteriaT>
+inline std::pair<PlannerCode, std::size_t> run_plan(
   PlannerBase<PlannerT>& planner,
   MetricBase<MetricT>& metric,
   StateSpaceBase<StateSpaceT>& state_space,
+  TerminationCriteriaBase<TerminationCriteriaT>& termination_criteria,
   const planner_state_t<PlannerT>& start,
   const planner_state_t<PlannerT>& goal)
 {
@@ -185,14 +181,26 @@ std::pair<PlannerCode, std::size_t> run_plan(
   PlannerCode code;
   std::size_t iterations{0};
 
-  SingleGoalTerminationCriteria criteria{goal};
   while (code == PlannerCode::SEARCHING)
   {
     ++iterations;
-    code = planner.update(metric, state_space, criteria);
+    code = planner.update(metric, state_space, termination_criteria);
   }
 
   return std::make_pair(code, iterations);
+}
+
+
+template <typename PlannerT, typename MetricT, typename StateSpaceT>
+inline std::pair<PlannerCode, std::size_t> run_plan(
+  PlannerBase<PlannerT>& planner,
+  MetricBase<MetricT>& metric,
+  StateSpaceBase<StateSpaceT>& state_space,
+  const planner_state_t<PlannerT>& start,
+  const planner_state_t<PlannerT>& goal)
+{
+  SingleGoalTerminationCriteria<planner_state_t<PlannerT>> criteria{goal};
+  return run_plan(planner, metric, state_space, criteria, start, goal);
 }
 
 
@@ -204,23 +212,6 @@ struct PlannerTraits<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, Expans
   using ExpansionQueueType = ExpansionQueueT;
   using ExpansionTableType = ExpansionTableT;
 };
-
-
-inline std::ostream& operator<<(std::ostream& os, const PlannerCode code)
-{
-  switch (static_cast<PlannerCode::Value>(code))
-  {
-  case PlannerCode::GOAL_FOUND:
-    return os << "GOAL_FOUND";
-  case PlannerCode::INFEASIBLE:
-    return os << "INFEASIBLE";
-  case PlannerCode::SEARCHING:
-    return os << "SEARCHING";
-  default:
-    break;
-  }
-  return os << "PlannerCode<invalid>";
-}
 
 }  // namespace mmpl
 
