@@ -16,6 +16,7 @@
 #include <mmpl/state.h>
 #include <mmpl/state_space.h>
 #include <mmpl/termination_criteria.h>
+#include <mmpl/planner_code_ostream.h>
 
 
 using namespace twod;

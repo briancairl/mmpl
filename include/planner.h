@@ -4,8 +4,6 @@
 #define MMPL_PLANNER_H
 
 // C++ Standard Library
-#include <initializer_list>
-#include <ostream>
 #include <type_traits>
 #include <utility>
 
@@ -16,6 +14,7 @@
 #include <mmpl/metric.h>
 #include <mmpl/state_space.h>
 #include <mmpl/termination_criteria.h>
+#include <mmpl/planner_code.h>
 
 namespace mmpl
 {
@@ -42,25 +41,6 @@ template <typename PlannerT> using planner_state_t = typename PlannerTraits<Plan
 
 
 template <typename PlannerT> using planner_value_t = typename PlannerTraits<PlannerT>::ValueType;
-
-
-struct PlannerCode
-{
-  enum Value : std::int8_t
-  {
-    GOAL_FOUND,
-    INFEASIBLE,
-    SEARCHING,
-  };
-
-  constexpr PlannerCode(Value _value = Value::SEARCHING) : value{_value} {}
-
-  constexpr operator Value() const { return value; }
-
-  constexpr operator bool() const { return value == Value::GOAL_FOUND; }
-
-  Value value;
-};
 
 
 template <typename DerivedT> class PlannerBase
@@ -232,23 +212,6 @@ struct PlannerTraits<ShortestPathPlanner<StateT, ValueT, ExpansionQueueT, Expans
   using ExpansionQueueType = ExpansionQueueT;
   using ExpansionTableType = ExpansionTableT;
 };
-
-
-inline std::ostream& operator<<(std::ostream& os, const PlannerCode code)
-{
-  switch (static_cast<PlannerCode::Value>(code))
-  {
-  case PlannerCode::GOAL_FOUND:
-    return os << "GOAL_FOUND";
-  case PlannerCode::INFEASIBLE:
-    return os << "INFEASIBLE";
-  case PlannerCode::SEARCHING:
-    return os << "SEARCHING";
-  default:
-    break;
-  }
-  return os << "PlannerCode<invalid>";
-}
 
 }  // namespace mmpl
 
