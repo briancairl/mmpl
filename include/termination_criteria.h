@@ -3,6 +3,7 @@
 
 // C++ Standard Library
 #include <type_traits>
+#include <utility>
 
 // MMPL
 #include <mmpl/crtp.h>
@@ -24,6 +25,12 @@ public:
   using StateType = termination_criteria_state_t<DerivedT>;
 
   inline bool is_terminal(const StateType& query) const { return this->derived()->is_terminal_impl(query); }
+
+  template<typename ExpansionTableT>
+  inline bool is_terminal(ExpansionTableT&& exp_table, const StateType& query) const
+  {
+    return this->derived()->is_terminal_impl(std::forward<ExpansionTableT>(exp_table), query);
+  }
 
 private:
   IMPLEMENT_CRTP_BASE_CLASS(TerminationCriteriaBase, DerivedT);
@@ -48,6 +55,7 @@ private:
 template <typename StateT> struct TerminationCriteriaTraits<SingleGoalTerminationCriteria<StateT>>
 {
   using StateType = StateT;
+  static constexpr bool is_expansion_aware = false;
 };
 
 }  // namespace mmpl

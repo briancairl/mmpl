@@ -77,6 +77,7 @@ public:
     StateSpaceBase<StateSpaceT>& state_space,
     TerminationCriteriaBase<TerminationCriteriaT>& termination_criteria)
   {
+
     // Abort if there is nothing left in the queue
     if (expansion_queue_.empty())
     {
@@ -105,7 +106,7 @@ public:
     };
 
     // Check if search is terminated
-    if (termination_criteria.is_terminal(pred.state))
+    if (is_terminal(termination_criteria, pred.state))
     {
       return PlannerCode::GOAL_FOUND;
     }
@@ -116,6 +117,20 @@ public:
     else
     {
       return PlannerCode::INFEASIBLE;
+    }
+  }
+
+  template <typename TerminationCriteriaT>
+  inline bool is_terminal(TerminationCriteriaBase<TerminationCriteriaT>& termination_criteria, const StateType& query)
+  {
+    if constexpr (TerminationCriteriaTraits<TerminationCriteriaT>::is_expansion_aware)
+    {
+
+      return termination_criteria.is_terminal(expansion_table_, query);
+    }
+    else
+    {
+      return termination_criteria.is_terminal(query);
     }
   }
 
@@ -172,11 +187,12 @@ public:
 };
 
 
-template <typename PlannerT, typename MetricT, typename StateSpaceT>
-std::pair<PlannerCode, std::size_t> run_plan(
+template <typename PlannerT, typename MetricT, typename StateSpaceT, typename TerminationCriteriaT>
+inline std::pair<PlannerCode, std::size_t> run_plan(
   PlannerBase<PlannerT>& planner,
   MetricBase<MetricT>& metric,
   StateSpaceBase<StateSpaceT>& state_space,
+  TerminationCriteriaBase<TerminationCriteriaT>& termination_criteria,
   const planner_state_t<PlannerT>& start,
   const planner_state_t<PlannerT>& goal)
 {
@@ -185,14 +201,26 @@ std::pair<PlannerCode, std::size_t> run_plan(
   PlannerCode code;
   std::size_t iterations{0};
 
-  SingleGoalTerminationCriteria criteria{goal};
   while (code == PlannerCode::SEARCHING)
   {
     ++iterations;
-    code = planner.update(metric, state_space, criteria);
+    code = planner.update(metric, state_space, termination_criteria);
   }
 
   return std::make_pair(code, iterations);
+}
+
+
+template <typename PlannerT, typename MetricT, typename StateSpaceT>
+inline std::pair<PlannerCode, std::size_t> run_plan(
+  PlannerBase<PlannerT>& planner,
+  MetricBase<MetricT>& metric,
+  StateSpaceBase<StateSpaceT>& state_space,
+  const planner_state_t<PlannerT>& start,
+  const planner_state_t<PlannerT>& goal)
+{
+  SingleGoalTerminationCriteria<planner_state_t<PlannerT>> criteria{goal};
+  return run_plan(planner, metric, state_space, criteria, start, goal);
 }
 
 
