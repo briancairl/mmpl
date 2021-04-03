@@ -103,12 +103,6 @@ private:
   /// Expansion count
   std::size_t expansion_count_;
 
-  /// Toggles logs on expansion
-  bool on_expansion_;
-
-  /// Toggles on parent lookup
-  bool on_parent_lookup_;
-
   /// Underlying expansion table
   UnderlyingT underlying_;
 
