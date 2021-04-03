@@ -50,6 +50,8 @@ public:
   static_assert(is_value<ValueT>(), "ValueT must be a valid metric value type");
   static_assert(is_value<HeuristicT>(), "HeuristicT must be a valid metric value type");
 
+  HeuristicValue() = default;
+
   /**
    * @brief Intialization constructor
    */
